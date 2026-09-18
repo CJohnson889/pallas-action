@@ -1,0 +1,29 @@
+# Runs in the published repository (CJohnson889/pallas-action) only: GitHub
+# reads workflows from a repository's root .github/, and this file lives under
+# action/ here. scripts/export-action.mjs copies it to the root of the export.
+# It proves a release works by scanning a public page with the action itself.
+name: Self-test
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Pallas accessibility check (this repository)
+        id: pallas
+        uses: ./
+        with:
+          urls: |
+            https://example.com/
+          profile: wcag_2_2_aa
+          fail-on: critical
+      - name: Show the outputs
+        run: |
+          echo "critical-count=${{ steps.pallas.outputs.critical-count }}"
+          echo "new-count=${{ steps.pallas.outputs.new-count }}"
+          echo "failing-count=${{ steps.pallas.outputs.failing-count }}"

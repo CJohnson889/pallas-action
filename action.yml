@@ -1,0 +1,80 @@
+name: 'Pallas accessibility check'
+description: 'Scan the pages a pull request deployed with the Pallas rule set and fail on new findings at or above a severity.'
+author: 'Lonia AI'
+branding:
+  icon: 'eye'
+  color: 'blue'
+inputs:
+  urls:
+    description: 'URLs to scan, one per line. Public, named, standard-port http(s) pages only (the same guard the product applies).'
+    required: true
+  profile:
+    description: 'Standards profile: wcag_2_2_a, wcag_2_2_aa, wcag_2_2_aaa, section_508 or en_301_549.'
+    required: false
+    default: 'wcag_2_2_aa'
+  fail-on:
+    description: 'Fail the check on NEW findings at or above this severity: critical, major, minor or advisory.'
+    required: false
+    default: 'critical'
+  baseline:
+    description: 'Path, relative to the workspace, of the baseline of findings already known. Findings in it never fail the check.'
+    required: false
+    default: '.pallas/baseline.json'
+  update-baseline:
+    description: 'Write the current findings to the baseline path (true or false). Use on the default branch, never on a pull request.'
+    required: false
+    default: 'false'
+  report:
+    description: 'Path, relative to the workspace, for the JSON report.'
+    required: false
+    default: 'pallas-report.json'
+  pallas-token:
+    description: 'An organization API token from Pallas Admin Settings (Growth and above). When set, the run is recorded in that organization as a scan. Store it as a repository secret.'
+    required: false
+    default: ''
+  pallas-api-url:
+    description: 'Where to upload. Leave the default unless Pallas support gives you another address.'
+    required: false
+    default: 'https://pallas-app-api.lonia.ai'
+outputs:
+  critical-count:
+    description: 'Critical findings found in this run, new or not.'
+    value: ${{ steps.scan.outputs.critical-count }}
+  new-count:
+    description: 'Findings not in the baseline.'
+    value: ${{ steps.scan.outputs.new-count }}
+  failing-count:
+    description: 'New findings at or above fail-on.'
+    value: ${{ steps.scan.outputs.failing-count }}
+  report:
+    description: 'Absolute path of the JSON report.'
+    value: ${{ steps.scan.outputs.report }}
+  pallas-scan-id:
+    description: 'The scan recorded in Pallas when pallas-token is set and the upload was accepted; empty otherwise.'
+    value: ${{ steps.scan.outputs.pallas-scan-id }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v5
+      with:
+        node-version: '22'
+    - name: Install the scanner runtime
+      shell: bash
+      run: |
+        cd "${{ github.action_path }}"
+        npm ci --omit=dev
+        npx playwright install --with-deps chromium
+    - name: Scan
+      id: scan
+      shell: bash
+      env:
+        INPUT_URLS: ${{ inputs.urls }}
+        INPUT_PROFILE: ${{ inputs.profile }}
+        INPUT_FAIL-ON: ${{ inputs.fail-on }}
+        INPUT_BASELINE: ${{ inputs.baseline }}
+        INPUT_UPDATE-BASELINE: ${{ inputs.update-baseline }}
+        INPUT_REPORT: ${{ inputs.report }}
+        INPUT_PALLAS-TOKEN: ${{ inputs.pallas-token }}
+        INPUT_PALLAS-API-URL: ${{ inputs.pallas-api-url }}
+      run: node "${{ github.action_path }}/dist/index.js"

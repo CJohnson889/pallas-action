@@ -1,0 +1,10 @@
+{
+  "name": "pallas-accessibility-check",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GitHub Action: scan pull request pages with the Pallas rule set and fail on new findings.",
+  "dependencies": {
+    "axe-core": "4.11.3",
+    "playwright": "^1.63.0"
+  }
+}
