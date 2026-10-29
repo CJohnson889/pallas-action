@@ -1807,7 +1807,25 @@ var ROLE_MAP = {
   "aria-required-parent": "frontend",
   "aria-roles": "frontend",
   "aria-valid-attr": "frontend",
-  "aria-valid-attr-value": "frontend"
+  "aria-valid-attr-value": "frontend",
+  // The rules axe-core 4.11.3 emits that have no authored content
+  // (src/data/pallas-rule-content.ts). Without these they arrived
+  // 'unassigned', and target-size alone was 220 of 253 findings on a
+  // production crawl of pallas.lonia.ai. Each follows its nearest authored
+  // sibling. tests/engine/website/ownerRoleCoverage.test.ts fails if any rule
+  // the engine can emit resolves to 'unassigned'.
+  //   target size and enhanced contrast are set by the design system, as
+  //   color-contrast and meta-viewport are;
+  "target-size": "design",
+  "color-contrast-enhanced": "design",
+  //   link purpose is the link's text, as link-name;
+  "identical-links-same-purpose": "content",
+  //   captions are content, as video-caption;
+  "audio-caption": "content",
+  //   markup and attributes are the front end's, as meta-refresh and the aria rules.
+  "meta-refresh-no-exceptions": "frontend",
+  "aria-roledescription": "frontend",
+  "duplicate-id-active": "frontend"
 };
 var TIME_ESTIMATES = {
   "image-alt": 5,
